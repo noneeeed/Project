@@ -1,5 +1,6 @@
 import { saveTraineeData, loadTraineeData } from './storage.js';
 
+let trainees = loadTraineeData();
 function addTrainee() {
   // TODO: Implement the logic
 }
