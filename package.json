@@ -15,6 +15,7 @@
   "type": "module",
   "main": "src/index.js",
   "scripts": {
+    "format": "prettier --write .",
     "test": "vitest",
     "start": "node src/index.js"
   },
