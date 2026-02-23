@@ -1,7 +1,7 @@
 import { saveCourseData, loadCourseData, loadTraineeData } from './storage.js';
 import chalk from 'chalk';
-const courses = loadCourseData();
-const trainees = loadTraineeData();
+let courses = loadCourseData();
+let trainees = loadTraineeData();
 
 function addCourse(args) {
   const [name, startDate] = args;
