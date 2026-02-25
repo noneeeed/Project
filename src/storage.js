@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import chalk from 'chalk';
 
 const TRAINEE_DATA_FILE_PATH = './data/trainees.json';
 const COURSE_DATA_FILE_PATH = './data/Courses.json';
@@ -9,10 +10,12 @@ export function loadTraineeData() {
     return JSON.parse(traineeData);
   } catch (error) {
     if (error.code === 'ENOENT') {
-      console.log('trainees.json not found. Creating an empty array.');
+      console.log(
+        chalk.red('trainees.json not found. Creating an empty array.')
+      );
       return [];
     } else {
-      console.log('Error reading trainees.json:', error.message);
+      console.log(chalk.red('Error reading trainees.json:', error.message));
       return [];
     }
   }
@@ -23,7 +26,7 @@ export function saveTraineeData(trainees) {
     const traineesArray = JSON.stringify(trainees, null, 2);
     fs.writeFileSync(TRAINEE_DATA_FILE_PATH, traineesArray, 'utf8');
   } catch (error) {
-    console.log('Error saving trainees.json:', error.message);
+    console.log(chalk.red('Error saving trainees.json:', error.message));
   }
 }
 
@@ -33,10 +36,12 @@ export function loadCourseData() {
     return JSON.parse(courseData);
   } catch (error) {
     if (error.code === 'ENOENT') {
-      console.log('courses.json not found. Creating an empty array.');
+      console.log(
+        chalk.red('courses.json not found. Creating an empty array.')
+      );
       return [];
     } else {
-      console.log('Error reading courses.json:', error.message);
+      console.log(chalk.red('Error reading courses.json:', error.message));
       return [];
     }
   }
@@ -47,6 +52,6 @@ export function saveCourseData(courses) {
     const coursesArray = JSON.stringify(courses, null, 2);
     fs.writeFileSync(COURSE_DATA_FILE_PATH, coursesArray, 'utf8');
   } catch (error) {
-    console.log('Error saving courses.json:', error.message);
+    console.log(chalk.red('Error saving courses.json:', error.message));
   }
 }

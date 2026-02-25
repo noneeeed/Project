@@ -8,9 +8,11 @@ function addCourse(args) {
       chalk.red('ERROR: Must provide course name and start date')
     );
   }
+
+  // Ensure ISO 8601 format
   if (!/^\d{4}-\d{2}-\d{2}$/.test(startDate)) {
     return console.log(
-      chalk.red('ERROR: Invalid start date. Must be in yyyy-MM-dd format')
+      chalk.red('ERROR: Invalid start date format (yyyy-MM-dd)')
     );
   }
 
@@ -19,7 +21,7 @@ function addCourse(args) {
 
   courses.push({ id, name, startDate, participants: [] });
   saveCourseData(courses);
-  console.log(`CREATED: ${id} ${name} ${startDate}`);
+  console.log(chalk.green(`CREATED: ${id} ${name} ${startDate}`));
 }
 
 function deleteCourse(args) {
@@ -35,7 +37,7 @@ function deleteCourse(args) {
 
   const [deleted] = courses.splice(index, 1);
   saveCourseData(courses);
-  console.log(`DELETED: ${id} ${deleted.name}`);
+  console.log(chalk.yellow(`DELETED: ${id} ${deleted.name}`));
 }
 
 function joinCourse(args) {
@@ -54,64 +56,66 @@ function joinCourse(args) {
   const course = courses.find((c) => c.id === courseID);
   const trainee = trainees.find((t) => t.id === traineeID);
 
-  if (!course)
-    return console.log(
-      chalk.red(`ERROR: Course with ID ${courseID} does not exist`)
-    );
-  if (!trainee)
-    return console.log(
-      chalk.red(`ERROR: Trainee with ID ${traineeID} does not exist`)
-    );
+  if (!course || !trainee) {
+    return console.log(chalk.red('ERROR: Course or Trainee ID not found'));
+  }
 
+  // Validate enrollment: Check for duplicates, capacity, and trainee workload
   if (course.participants.includes(traineeID)) {
-    return console.log(
-      chalk.red('ERROR: The Trainee has already joined this course')
-    );
+    return console.log(chalk.red('ERROR: Trainee already enrolled'));
   }
   if (course.participants.length >= 20) {
-    return console.log(chalk.red('ERROR: The course is full.'));
+    return console.log(chalk.red('ERROR: Course capacity reached (20)'));
   }
 
+  // Cross-reference: Count how many other courses this specific trainee is already in
   const enrollmentCount = courses.filter((c) =>
     c.participants.includes(traineeID)
   ).length;
   if (enrollmentCount >= 5) {
     return console.log(
-      chalk.red('ERROR: A trainee is not allowed to join more than 5 courses.')
+      chalk.red('ERROR: Max enrollment limit reached (5 courses per trainee)')
     );
   }
 
   course.participants.push(traineeID);
   saveCourseData(courses);
-  console.log(`${trainee.firstName} Joined ${course.name}`);
+  console.log(chalk.green(`${trainee.firstName} joined ${course.name}`));
 }
 
 function getAllCourses() {
   const courses = loadCourseData();
+
+  // Create a copy to sort so we don't accidentally mutate the original data order in storage
   const sorted = [...courses].sort((a, b) =>
     a.startDate.localeCompare(b.startDate)
   );
 
-  console.log('Courses:');
+  console.log(chalk.bold('Courses:'));
   sorted.forEach((c) => {
-    const fullLabel = c.participants.length >= 20 ? ' FULL' : '';
+    const isFull = c.participants.length >= 20;
+    const label = isFull ? chalk.red(' [FULL]') : '';
     console.log(
-      `${c.id} ${c.name} ${c.startDate} ${c.participants.length}${fullLabel}`
+      `${c.id} ${c.name} (${c.startDate}) - Enrolled: ${c.participants.length}${label}`
     );
   });
   console.log(`\nTotal: ${courses.length}`);
 }
 
+// Main entry point for course logic; maps CLI sub-commands to functions
 export function handleCourseCommand(subcommand, args) {
-  if (subcommand === 'ADD') addCourse(args);
-  else if (subcommand === 'UPDATE') updateCourse(args);
-  else if (subcommand === 'DELETE') deleteCourse(args);
-  else if (subcommand === 'JOIN') joinCourse(args);
-  else if (subcommand === 'LEAVE') leaveCourse(args);
-  else if (subcommand === 'GET') getCourse(args);
-  else if (subcommand === 'GETALL') getAllCourses();
-  else
-    console.log(
-      chalk.red(`ERROR: Invalid sub-command ${subcommand} for COURSE`)
-    );
+  switch (subcommand?.toUpperCase()) {
+    case 'ADD':
+      return addCourse(args);
+    case 'DELETE':
+      return deleteCourse(args);
+    case 'JOIN':
+      return joinCourse(args);
+    case 'GETALL':
+      return getAllCourses();
+    default:
+      console.log(
+        chalk.red(`ERROR: Invalid sub-command "${subcommand}" for COURSE`)
+      );
+  }
 }
