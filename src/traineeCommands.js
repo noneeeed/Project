@@ -1,4 +1,9 @@
-import { saveTraineeData, loadTraineeData, loadCourseData } from './storage.js';
+import {
+  saveTraineeData,
+  loadTraineeData,
+  loadCourseData,
+  saveCourseData,
+} from './storage.js';
 import chalk from 'chalk';
 
 function addTrainee(args) {
@@ -7,7 +12,7 @@ function addTrainee(args) {
     return console.log(chalk.red('ERROR: Must provide first and last name'));
 
   const trainees = loadTraineeData();
-  // Using random ID for simplicity; consider UUID for production
+  // Using random ID for simplicity
   const id = Math.floor(Math.random() * 100000);
 
   trainees.push({ id, firstName, lastName });
@@ -17,7 +22,8 @@ function addTrainee(args) {
 
 function updateTrainee(args) {
   const id = parseInt(args[0]);
-  const [_, firstName, lastName] = args;
+  const firstName = args[1];
+  const lastName = args[2];
 
   if (isNaN(id) || !firstName || !lastName) {
     return console.log(
@@ -72,12 +78,34 @@ function fetchAllTrainees() {
   console.log(`\nTotal: ${trainees.length}`);
 }
 
-// Added missing logic for the DELETE subcommand referenced below
 function deleteTrainee(args) {
   const id = parseInt(args[0]);
-  const trainees = loadTraineeData().filter((t) => t.id !== id);
-  saveTraineeData(trainees);
-  console.log(chalk.yellow(`DELETED: Trainee ${id}`));
+  if (isNaN(id))
+    return console.log(chalk.red('ERROR: Must provide a valid Trainee ID'));
+
+  const trainees = loadTraineeData();
+  const traineeToDelete = trainees.find((t) => t.id === id);
+
+  if (!traineeToDelete) {
+    return console.log(
+      chalk.red(`ERROR: Trainee with ID ${args[0]} does not exist`)
+    );
+  }
+
+  const updatedTrainees = trainees.filter((t) => t.id !== id);
+  saveTraineeData(updatedTrainees);
+
+  const courses = loadCourseData();
+  courses.forEach((c) => {
+    c.participants = c.participants.filter((pId) => pId !== id);
+  });
+  saveCourseData(courses);
+
+  console.log(
+    chalk.yellow(
+      `DELETED: ${id} ${traineeToDelete.firstName} ${traineeToDelete.lastName}`
+    )
+  );
 }
 
 export function handleTraineeCommand(subcommand, args) {
