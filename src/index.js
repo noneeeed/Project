@@ -2,29 +2,29 @@ import { parseCommand } from './command-parser.js';
 import promptSync from 'prompt-sync';
 import { handleCourseCommand } from './courseCommands.js';
 import { handleTraineeCommand } from './traineeCommands.js';
+import chalk from 'chalk';
 
-const prompt = promptSync();
+const prompt = promptSync({ sigint: true });
 
 while (true) {
-  let userInput = prompt(
-    "System initialized. Enter commands (or 'QUIT'/'q' to exit): "
-  );
+  let userInput = prompt('>ENTER COMMAND OR PRESS QUIT OR q TO EXIT: ').trim();
+
+  if (!userInput || userInput.trim() === '') continue;
+
   if (userInput === 'QUIT' || userInput === 'q') {
     console.log('Exiting program...');
     break;
   }
-  const { command, subcommand, args } = parseCommand(userInput);
-  if (command === 'course') {
-    // Call the appropriate function from courseCommands.js based on the subcommand and args
-  } else if (command === 'trainee') {
-    // Call the appropriate function from traineeCommands.js based on the subcommand and args
+
+  const { mainCommand, subCommand, args } = parseCommand(userInput);
+
+  if (mainCommand === 'COURSE') {
+    handleCourseCommand(subCommand, args);
+  } else if (mainCommand === 'TRAINEE') {
+    handleTraineeCommand(subCommand, args);
   } else {
     console.log(
-      "Invalid command. Please enter 'course' or 'trainee' followed by a subcommand and arguments."
+      chalk.red("ERROR: Invalid command. Please enter 'COURSE' or 'TRAINEE'.")
     );
   }
 }
-
-// Call the appropriate function from courseCommands.js based on the subcommand and args
-// This is the entry point of your application.
-// Ask user for input, parse the command, and call the appropriate function from courseCommands.js or traineeCommands.js based on the command.
