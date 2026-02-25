@@ -24,8 +24,39 @@ function addCourse(args) {
   console.log(chalk.green(`CREATED: ${id} ${name} ${startDate}`));
 }
 
+function updateCourse(args) {
+  const id = parseInt(args[0]);
+  const name = args[1];
+  const startDate = args[2];
+
+  if (isNaN(id) || !name || !startDate) {
+    return console.log(
+      chalk.red('ERROR: Must provide ID, name and start date.')
+    );
+  }
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(startDate)) {
+    return console.log(
+      chalk.red('ERROR: Invalid start date. Must be in yyyy-MM-dd format')
+    );
+  }
+
+  const courses = loadCourseData();
+  const course = courses.find((c) => c.id === id);
+
+  if (!course) {
+    return console.log(chalk.red(`ERROR: Course with ID ${id} does not exist`));
+  }
+
+  course.name = name;
+  course.startDate = startDate;
+  saveCourseData(courses);
+  console.log(`UPDATED: ${id} ${name} ${startDate}`);
+}
+
 function deleteCourse(args) {
   const id = parseInt(args[0]);
+
   const courses = loadCourseData();
   const index = courses.findIndex((c) => c.id === id);
 
@@ -34,7 +65,6 @@ function deleteCourse(args) {
       chalk.red(`ERROR: Course with ID ${args[0]} does not exist`)
     );
   }
-
   const [deleted] = courses.splice(index, 1);
   saveCourseData(courses);
   console.log(chalk.yellow(`DELETED: ${id} ${deleted.name}`));
@@ -83,6 +113,51 @@ function joinCourse(args) {
   console.log(chalk.green(`${trainee.firstName} joined ${course.name}`));
 }
 
+function leaveCourse(args) {
+  const courseID = parseInt(args[0]);
+  const traineeID = parseInt(args[1]);
+
+  const courses = loadCourseData();
+  const course = courses.find((c) => c.id === courseID);
+
+  if (!course) {
+    return console.log(
+      chalk.red(`ERROR: Course with ID ${args[0]} does not exist`)
+    );
+  }
+
+  const index = course.participants.indexOf(traineeID);
+  if (index === -1) {
+    return console.log(
+      chalk.red('ERROR: Trainee is not enrolled in this course')
+    );
+  }
+
+  course.participants.splice(index, 1);
+  saveCourseData(courses);
+  console.log(chalk.yellow(`Trainee ${traineeID} left ${course.name}`));
+}
+
+function getCourse(args) {
+  const id = parseInt(args[0]);
+  const courses = loadCourseData();
+  const trainees = loadTraineeData();
+  const course = courses.find((c) => c.id === id);
+
+  if (!course) {
+    return console.log(
+      chalk.red(`ERROR: Course with ID ${args[0]} does not exist`)
+    );
+  }
+
+  console.log(`${course.id} ${course.name} ${course.startDate}`);
+  console.log(`Participants (${course.participants.length}):`);
+
+  course.participants.forEach((pId) => {
+    const t = trainees.find((tr) => tr.id === pId);
+    if (t) console.log(`- ${t.id} ${t.firstName} ${t.lastName}`);
+  });
+}
 function getAllCourses() {
   const courses = loadCourseData();
 
@@ -107,12 +182,19 @@ export function handleCourseCommand(subcommand, args) {
   switch (subcommand?.toUpperCase()) {
     case 'ADD':
       return addCourse(args);
+    case 'UPDATE':
+      return updateCourse(args);
     case 'DELETE':
       return deleteCourse(args);
     case 'JOIN':
       return joinCourse(args);
+    case 'LEAVE':
+      return leaveCourse(args);
+    case 'GET':
+      return getCourse(args);
     case 'GETALL':
       return getAllCourses();
+
     default:
       console.log(
         chalk.red(`ERROR: Invalid sub-command "${subcommand}" for COURSE`)
